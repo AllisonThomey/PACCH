@@ -60,84 +60,79 @@ def process_national_boundary(country):
     path_in= os.path.join(folder, filename)
     boundaries = geopandas.read_file(path_in, crs="epsg:4326")
 
-    for idx, country in countries.iterrows():
-
-        iso3 = country["iso3"]
-        country_boundaries = boundaries[boundaries['GID_0'] == country['iso3']]
-        gid_region = country['gid_region']
-        gid_level = 'GID_{}'.format(gid_region)
+    iso3 = countries['iso3']
+    country_boundaries = boundaries[boundaries['GID_0'] == countries['iso3']]
+    gid_region = countries['gid_region']
+    gid_level = 'GID_{}'.format(gid_region)
 
     #extract GID_0 for the country of interest, e.g., using the iso3 code
-        if not country['iso3']=='BGD':
-            continue
-
-        regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
-        if not os.path.exists(regions_folder_path):
-            os.makedirs(regions_folder_path)
+    regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
+    if not os.path.exists(regions_folder_path):
+        os.makedirs(regions_folder_path)
     #do any required processing, e.g., simplification or remove small areas
-        country_boundaries["geometry"] = country_boundaries.geometry.simplify(
-            tolerance=0.01, preserve_topology=True)
+    country_boundaries["geometry"] = country_boundaries.geometry.simplify(
+        tolerance=0.01, preserve_topology=True)
     
-        #remove small shapes
-        country_boundaries['geometry'] = country_boundaries.apply(
-            remove_small_shapes, axis=1)
+    #remove small shapes
+    country_boundaries['geometry'] = country_boundaries.apply(
+        remove_small_shapes, axis=1)
     #export the national outline to a .shp
-        filename = 'national_outline.shp'
-        path_out = os.path.join('data', 'processed', iso3, 'national', filename)
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        country_boundaries.to_file(path_out, crs='epsg:4326')
-
+    filename = 'national_outline.shp'
+    path_out = os.path.join('data', 'processed', iso3, 'national', filename)
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
+    country_boundaries.to_file(path_out, crs='epsg:4326')
+    
     return
 
-def process_regional_boundary(country):
-    """
-    this explains what the function does...
+# def process_regional_boundary(country):
+#     """
+#     this explains what the function does...
 
 
-    """
-    path = os.path.join('data', 'countries.csv')
-    countries = pandas.read_csv(path, encoding='latin-1')
+#     """
+#     path = os.path.join('data', 'countries.csv')
+#     countries = pandas.read_csv(path, encoding='latin-1')
 
-    for idx, country in countries.iterrows():
+#     for idx, country in countries.iterrows():
 
-        iso3 = country["iso3"]
-        gid_region = country['gid_region']
-        gid_level = 'GID_{}'.format(gid_region)
+#         iso3 = country["iso3"]
+#         gid_region = country['gid_region']
+#         gid_level = 'GID_{}'.format(gid_region)
 
-        #prefered gid level
-        filename = 'gadm36_{}.shp'.format(country['gid_region'])
-        path_in = os.path.join('data', 'raw', 'gadm36_levels_shp', filename)
-        boundaries = geopandas.read_file(path_in)
-        country_boundaries = boundaries[boundaries['GID_0'] == country['iso3']]
+#         #prefered gid level
+#         filename = 'gadm36_{}.shp'.format(country['gid_region'])
+#         path_in = os.path.join('data', 'raw', 'gadm36_levels_shp', filename)
+#         boundaries = geopandas.read_file(path_in)
+#         country_boundaries = boundaries[boundaries['GID_0'] == country['iso3']]
         
-        #extract GID_0 for the country of interest, e.g., using the iso3 code
-        if not country['iso3']=='BGD':
-            continue
-        #set the filename depending our preferred regional level
-        filename = "gadm36_{}.shp".format(gid_region)
-        regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
-        if not os.path.exists(regions_folder_path):
-            os.makedirs(regions_folder_path)
+#         #extract GID_0 for the country of interest, e.g., using the iso3 code
+#         if not country['iso3']=='BGD':
+#             continue
+#         #set the filename depending our preferred regional level
+#         filename = "gadm36_{}.shp".format(gid_region)
+#         regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
+#         if not os.path.exists(regions_folder_path):
+#             os.makedirs(regions_folder_path)
 
-        #this is how we simplify the geometries
-        country_boundaries["geometry"] = country_boundaries.geometry.simplify(
-            tolerance=0.01, preserve_topology=True)
+#         #this is how we simplify the geometries
+#         country_boundaries["geometry"] = country_boundaries.geometry.simplify(
+#             tolerance=0.01, preserve_topology=True)
         
-        #remove small shapes
-        country_boundaries['geometry'] = country_boundaries.apply(
-            remove_small_shapes, axis=1)
+#         #remove small shapes
+#         country_boundaries['geometry'] = country_boundaries.apply(
+#             remove_small_shapes, axis=1)
                                             
-        #set the filename depending our preferred regional level
-        filename = "gadm36_{}.shp".format(gid_region)
+#         #set the filename depending our preferred regional level
+#         filename = "gadm36_{}.shp".format(gid_region)
 
-        #saving gid region boundaries
-        path_out = os.path.join('data', 'processed', iso3,'gid_region', filename)
-        if not os.path.exists(path_out):
-            os.makedirs(path_out)
-        country_boundaries.to_file(path_out, crs='epsg:4326')
+#         #saving gid region boundaries
+#         path_out = os.path.join('data', 'processed', iso3,'gid_region', filename)
+#         if not os.path.exists(path_out):
+#             os.makedirs(path_out)
+#         country_boundaries.to_file(path_out, crs='epsg:4326')
 
-    return
+#     return
 
 
 if __name__ == "__main__":
@@ -150,8 +145,8 @@ if __name__ == "__main__":
         if not country['iso3']=='BGD':
             continue
 
-        process_regional_boundary(country)
-
+        process_national_boundary(country)
+        print(country)
         # #GID0
         # filename = "gadm36_0.shp"
         # folder = os.path.join('data', 'raw', 'gadm36_levels_shp')
