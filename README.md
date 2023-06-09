@@ -14,7 +14,7 @@ All data utilized are open-source. The following datasets are required to run th
 
 - WorldPop 2020 global mosaic
 - GADM global regional boundaries
-- Microwealtg estimates from Chi et al. (2022)
+- Microwealth estimates from Chi et al. (2022)
 - WRI Aqueduct coastal flooding hazard layers for the RISES-AM model 
 
 
