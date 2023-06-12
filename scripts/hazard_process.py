@@ -68,11 +68,8 @@ def process_national_hazard(country):
 
 def process_regional_hazard (country, region):
     """
-   This function creates a regional composite hazrd 
-    .tif using regional boundary files created in 
-    process_regional_boundary function and national
-    population files created in process_national_population
-    function.
+    This function creates a regional composite hazrd 
+    .tif
 
 
     """
@@ -84,8 +81,9 @@ def process_regional_hazard (country, region):
 
 
     #loading in hazard .tif
-    filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.tif'
-    path_hazard = os.path.join('data','raw','flood_hazard', filename)
+    filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.tif' 
+    folder = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', 'national')
+    path_hazard = os.path.join(folder, filename)
     hazard = rasterio.open(path_hazard, 'r+')
     hazard.nodata = 255                       #set the no data value
     hazard.crs.from_epsg(4326)  
