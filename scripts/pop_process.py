@@ -67,7 +67,7 @@ def process_national_population(country):
     return  
 
 
-def process_regional_population(country):
+def process_regional_population(country, region):
     """
     This function creates a regional composite population 
     .tiff using regional boundary files created in 
@@ -80,7 +80,7 @@ def process_regional_population(country):
     iso3 = country['iso3']
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
-    
+    gid_id = region[gid_level]
 
     #loading in national population file
     filename = 'ppp_2020_1km_Aggregated.tif' #each regional file is named using the gid id
@@ -90,13 +90,13 @@ def process_regional_population(country):
     hazard.nodata = 255                       #set the no data value
     hazard.crs.from_epsg(4326)
     
-    #load in regional .shp file
-    filename = "gadm36_{}.shp".format(gid_region)
-    path= os.path.join('data', 'processed', iso3,'gid_region', filename)
-    country_pop= gpd.read_file(path, crs='epsg:4326')
-    gid_id = country_pop[gid_level]
+    # #load in regional .shp file
+    # filename = "gadm36_{}.shp".format(gid_region)
+    # path= os.path.join('data', 'processed', iso3,'gid_region', filename)
+    # country_pop= gpd.read_file(path, crs='epsg:4326')
+    # gid_id = country_pop[gid_level]
 
-    geo = gpd.GeoDataFrame(gpd.GeoSeries(country_pop.geometry))
+    geo = gpd.GeoDataFrame(gpd.GeoSeries(region.geometry))
     #this line sets geometry for resulting geodataframe
     geo = geo.rename(columns={0:'geometry'}).set_geometry('geometry')
     #convert to json
@@ -115,10 +115,11 @@ def process_regional_population(country):
                     "crs": 'epsg:4326'})
 
 
-    print(gid_id)
+    # print(gid_id)
     #now we write out at the regional level
-    filename_out = 'ppp_2020_1km_Aggregated.tif' #each regional file is named using the gid id
+    filename_out = '{}.tif'.format(gid_id) #each regional file is named using the gid id
     folder_out = os.path.join('data', 'processed', iso3 , 'population', gid_id)
+
     if not os.path.exists(folder_out):
         os.makedirs(folder_out)
     path_out = os.path.join(folder_out, filename_out)
@@ -144,28 +145,29 @@ if __name__ == "__main__":
             continue
         
         # #define our country-specific parameters, including gid information
-        # iso3 = country['iso3']
-        # gid_region = country['gid_region']
-        # gid_level = 'GID_{}'.format(gid_region)
+        iso3 = country['iso3']
+        gid_region = country['gid_region']
+        gid_level = 'GID_{}'.format(gid_region)
         
-        # #set the filename depending our preferred regional level
-        # filename = "gadm36_{}.shp".format(gid_region)
-        # folder = os.path.join('data','processed', iso3, 'gid_region')
+        #set the filename depending our preferred regional level
+        filename = "gadm36_{}.shp".format(gid_region)
+        folder = os.path.join('data','processed', iso3, 'gid_region')
         
-        # #then load in our regions as a geodataframe
-        # path_regions = os.path.join(folder, filename)
-        # regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
+        #then load in our regions as a geodataframe
+        path_regions = os.path.join(folder, filename)
+        regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
         
         # print("Working on process_national_population")
         # process_national_population(country)
-
-        # for idx, region in regions.iterrows():
+        print("Working on process_regional_population")
+        
+        for idx, region in regions.iterrows():
         # #     # # if region.geometry == None:
         # #      continue 
         #     if not region[gid_level] == 'BGD.1.5_1':
         #         continue
             
-        print("Working on process_regional_population")
-        process_regional_population(country)
+       
+            process_regional_population(country, region)
 
         
