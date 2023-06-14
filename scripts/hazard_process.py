@@ -66,6 +66,72 @@ def process_national_hazard(country):
     return
 
 
+def convert_national_hazard(country):
+    """
+    This function converts the national hazard .tif file into
+    a .shp file
+    
+    """
+    iso3 = country['iso3']
+    gid_region = country['gid_region']
+
+    folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', 'national')
+    if not os.path.exists(folder_out):
+        os.makedirs(folder_out)
+    filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.shp'
+    path_out = os.path.join(folder_out, filename)
+
+    folder = os.path.join('data', 'processed', iso3, 'hazards', 'inuncoast', 'national')
+    filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.tif'
+    path_in = os.path.join(folder, filename)
+
+    #moved if not con down with filename added in
+    if not os.path.exists(path_in):
+        os.makedirs(path_in)
+
+    with rasterio.open(path_in) as src:
+
+        affine = src.transform
+        array = src.read(1)
+
+        output = []
+
+        for vec in rasterio.features.shapes(array):
+
+            if vec[1] > 0 and not vec[1] == 255:
+
+                coordinates = [i for i in vec[0]['coordinates'][0]]
+
+                coords = []
+
+                for i in coordinates:
+
+                    x = i[0]
+                    y = i[1]
+
+                    x2, y2 = src.transform * (x, y)
+
+                    coords.append((x2, y2))
+
+                output.append({
+                    'type': vec[0]['type'],
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': [coords],
+                    },
+                    'properties': {
+                        'value': vec[1],
+                    }
+                })
+
+    output = gpd.GeoDataFrame.from_features(output, crs='epsg:4326')
+    output.to_file(path_out, driver='ESRI Shapefile')
+
+
+    return
+
+
+
 def process_regional_hazard (country, region):
     """
     This function creates a regional composite hazrd 
@@ -120,6 +186,83 @@ def process_regional_hazard (country, region):
     return
 
 
+
+def convert_regional_hazard (country, region):
+    """
+    This function converts the national hazard .tif file into
+    a .shp file
+    
+    """
+    iso3 = country['iso3']
+    gid_region = country['gid_region']
+    gid_level = 'GID_{}'.format(gid_region)
+    gid_id = region[gid_level]
+
+
+    folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)    
+    filename = '{}.shp'.format(gid_id)
+    path_out = os.path.join(folder_out, filename)
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
+
+
+    folder = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
+    filename = '{}.tif'.format(gid_id)
+    path_in = os.path.join(folder, filename)
+    if not os.path.exists(path_in):
+        os.makedirs(path_in)
+
+    #moved if not con down with filename added in
+    # if not os.path.exists(path_in):
+    #     continue
+
+    with rasterio.open(path_in) as src:
+
+        affine = src.transform
+        array = src.read(1)
+
+        output = []
+
+        for vec in rasterio.features.shapes(array):
+
+            if vec[1] > 0 and not vec[1] == 255:
+
+                coordinates = [i for i in vec[0]['coordinates'][0]]
+
+                coords = []
+
+                for i in coordinates:
+
+                    x = i[0]
+                    y = i[1]
+
+                    x2, y2 = src.transform * (x, y)
+
+                    coords.append((x2, y2))
+
+                output.append({
+                    'type': vec[0]['type'],
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': [coords],
+                    },
+                    'properties': {
+                        'value': vec[1],
+                    }
+                })
+    # if len(output) ==0:
+    #     continue
+
+    output = gpd.GeoDataFrame.from_features(output, crs='epsg:4326')
+    output.to_file(path_out, driver='ESRI Shapefile')
+
+
+    return
+
+
+
+
+
 if __name__ == "__main__":
 
     path = os.path.join('data', 'countries.csv')
@@ -145,16 +288,18 @@ if __name__ == "__main__":
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
         
-        # print("Working on process_national_hazard for {}".format(iso3))
-        # process_national_hazard(country)
+        print("Working on process_national_hazard for {}".format(iso3))
+        process_national_hazard(country)
+        convert_national_hazard (country)
         
         print("Working on process_regional_hazard")
         
         for idx, region in regions.iterrows():
         # #     # # if region.geometry == None:
         # #      continue 
-            #  if not region[gid_level] == 'BGD.1.5_1':
-            #      continue
+            if not region[gid_level] == 'BGD.1.5_1':
+                continue
             
        
-             process_regional_hazard(country, region)
+            process_regional_hazard(country, region)
+            convert_regional_hazard (country, region)

@@ -11,10 +11,10 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
 BASE_PATH = CONFIG['file_locations']['base_path']
 
-def process_national_rwi(country):
+def process_rwi_geometry(country):
     """
 
-    define function
+    Adds geometry column into .csv data to make use of latitude and longitude easier
 
     """
     #assigning variables
@@ -46,7 +46,7 @@ def process_national_rwi(country):
 
 def process_regional_rwi(country, region):
     """
-    function
+    creates relative wealth estimates .shp file by region
 
     """
     iso3 = country['iso3']                 
@@ -93,9 +93,9 @@ if __name__ == "__main__":
 
         iso3 = country['iso3'] 
 
-        # process_national_rwi(country)
+        # process_rwi_geometry(country)
 
-            #define our country-specific parameters, including gid information
+        #define our country-specific parameters, including gid information
     
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
