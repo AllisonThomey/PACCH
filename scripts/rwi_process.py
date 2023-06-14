@@ -5,7 +5,11 @@ import rasterio
 from rasterio.mask import mask
 import pandas
 import geopandas as gpd
+import configparser
 
+CONFIG = configparser.ConfigParser()
+CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
+BASE_PATH = CONFIG['file_locations']['base_path']
 
 def process_national_rwi(country):
     """
@@ -18,7 +22,7 @@ def process_national_rwi(country):
 
     #path in for rwi files
     filename = '{}_relative_wealth_index.csv'.format(iso3)
-    path_rwi = os.path.join('data','raw','rwi', filename)
+    path_rwi = os.path.join(BASE_PATH,'raw','rwi', filename)
     wealth = gpd.read_file(path_rwi, encoding='latin-1')
 
     #making long lat points into geometry column
@@ -28,7 +32,7 @@ def process_national_rwi(country):
 
     #setting path out
     filename_out = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder_out = os.path.join('data', 'processed', iso3 , 'rwi', 'national')
+    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
     if not os.path.exists(folder_out):
         os.makedirs(folder_out)
     path_out = os.path.join(folder_out, filename_out)
@@ -50,42 +54,28 @@ def process_regional_rwi(country, region):
     gid_level = 'GID_{}'.format(gid_region)
     gid_id = region[gid_level]
 
-    # #loading in gid level shape file
-    # filename = "gadm36_{}.shp".format(gid_region)
-    # path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
-    # gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
-    gdf_region = gpd.GeoDataFrame(gpd.GeoSeries(region.geometry), crs="EPSG:4326")
-
-
-    # filename = "test.shp"
-    # path = os.path.join('data', 'raw', filename)
-    # gdf_region.to_file(path, crs="EPSG:4326")
-
-    # # print(len(gdf_region))
+    #loading in gid level shape file
+    filename = "gadm36_{}.shp".format(gid_region)
+    path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
+    gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
+    gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
 
     #loading in rwi info
     filename = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder= os.path.join('data', 'processed', iso3 , 'rwi', 'national')
+    folder= os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
     path_rwi= os.path.join(folder, filename)
-    geo = gpd.read_file(path_rwi, crs="EPSG:4326")
-    gdf_rwi = gpd.GeoDataFrame(geo.geometry, crs='epsg:4326')
+    gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
 
-    # filename = "test_rwi.shp"
-    # path = os.path.join('data', 'raw', filename)
-    # gdf_rwi.to_file(path, crs="EPSG:4326")
+    #https://stackoverflow.com/questions/30405652/how-to-find-which-points-intersect-with-a-polygon-in-geopandas
+    gdf_rwi = gpd.overlay(gdf_rwi, gdf_region, how='intersection')
 
-    region_rwi = gpd.overlay(gdf_region, gdf_rwi, how='intersection')
-
-    # print(len(region_rwi))
-    
     filename = '{}.shp'.format(gid_id)
-    folder_out = os.path.join('data', 'processed', iso3, 'rwi', 'regions' )
+    folder_out = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions' )
     if not os.path.exists(folder_out):
         os.makedirs(folder_out)
     path_out = os.path.join(folder_out, filename)
 
-    region_rwi.to_file(path_out, crs="EPSG:4326")
-
+    gdf_rwi.to_file(path_out, crs="EPSG:4326")
 
     return
 
@@ -100,8 +90,9 @@ if __name__ == "__main__":
 
         if not country["iso3"] == 'BGD':
             continue
+
         iso3 = country['iso3'] 
-        # print("Working on process_national_rwi")
+
         # process_national_rwi(country)
 
             #define our country-specific parameters, including gid information
@@ -118,6 +109,7 @@ if __name__ == "__main__":
         regions = gpd.read_file(path_regions, crs='epsg:4326')
 
         for idx, region in regions.iterrows():
+            
             print("working on {}".format(region[gid_level]))
             process_regional_rwi(country, region)
 

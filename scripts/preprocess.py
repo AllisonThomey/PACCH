@@ -46,6 +46,7 @@ def remove_small_shapes(x):
 
         return MultiPolygon(new_geom)
 
+
 def process_national_boundary(country):
     """
     This function creates a national outline .shp for a 
@@ -82,6 +83,7 @@ def process_national_boundary(country):
     country_boundaries.to_file(path_out, crs='epsg:4326')
     
     return
+
 
 def process_regional_boundary(country):
     """
@@ -136,16 +138,16 @@ if __name__ == "__main__":
 
     for idx, country in countries.iterrows():
 
-        if not country['iso3']=='BGD':
+        if not country['iso3'] == 'BGD':
             continue
 
-    print("Working on process_national_boundary")
-    process_national_boundary(country)
+        print("Working on process_national_boundary")
+        process_national_boundary(country)
 
-    print("Working on process_regional_boundary")
-    process_regional_boundary(country)
+        print("Working on process_regional_boundary")
+        process_regional_boundary(country)
 
- 
+
         # #GID0
         # filename = "gadm36_0.shp"
         # folder = os.path.join('data', 'raw', 'gadm36_levels_shp')
