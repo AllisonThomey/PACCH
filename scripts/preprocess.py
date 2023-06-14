@@ -48,8 +48,8 @@ def remove_small_shapes(x):
 
 def process_national_boundary(country):
     """
-    this explains what the function does...
-
+    This function creates a national outline .shp for a 
+    country with small shapes removed and simplified
 
     """
     #load in GID_0 gadm layer
@@ -85,8 +85,11 @@ def process_national_boundary(country):
 
 def process_regional_boundary(country):
     """
-    this explains what the function does...
+    This function creates a regional composite outline .shp 
+    for a country with small shapes removed and simplified.
 
+    Regional level is based on best admistrative level for 
+    project analysis level.
 
     """
 
@@ -136,9 +139,13 @@ if __name__ == "__main__":
         if not country['iso3']=='BGD':
             continue
 
-        # process_national_boundary(country)
-        process_regional_boundary(country)
-        print(country)
+    print("Working on process_national_boundary")
+    process_national_boundary(country)
+
+    print("Working on process_regional_boundary")
+    process_regional_boundary(country)
+
+ 
         # #GID0
         # filename = "gadm36_0.shp"
         # folder = os.path.join('data', 'raw', 'gadm36_levels_shp')
