@@ -46,10 +46,11 @@ def remove_small_shapes(x):
 
         return MultiPolygon(new_geom)
 
+
 def process_national_boundary(country):
     """
-    this explains what the function does...
-
+    This function creates a national outline .shp for a 
+    country with small shapes removed and simplified
 
     """
     #load in GID_0 gadm layer
@@ -83,10 +84,14 @@ def process_national_boundary(country):
     
     return
 
+
 def process_regional_boundary(country):
     """
-    this explains what the function does...
+    This function creates a regional composite outline .shp 
+    for a country with small shapes removed and simplified.
 
+    Regional level is based on best admistrative level for 
+    project analysis level.
 
     """
 
@@ -133,69 +138,12 @@ if __name__ == "__main__":
 
     for idx, country in countries.iterrows():
 
-        if not country['iso3']=='BGD':
+        if not country['iso3'] == 'BGD':
             continue
 
-        # process_national_boundary(country)
+        print("Working on process_national_boundary")
+        process_national_boundary(country)
+
+        print("Working on process_regional_boundary")
         process_regional_boundary(country)
-        print(country)
-        # #GID0
-        # filename = "gadm36_0.shp"
-        # folder = os.path.join('data', 'raw', 'gadm36_levels_shp')
-        # path_in= os.path.join(folder, filename)
-        # boundaries = geopandas.read_file(path_in, crs="epsg:4326")
 
-        # iso3 = country["iso3"]
-        # country_boundaries = boundaries[boundaries['GID_0'] == country['iso3']]
-        # gid_region = country['gid_region']
-        # gid_level = 'GID_{}'.format(gid_region)
-
-        # regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
-        # if not os.path.exists(regions_folder_path):
-        #     os.makedirs(regions_folder_path)
-    
-        # #this is how we simplify the geometries
-        # country_boundaries["geometry"] = country_boundaries.geometry.simplify(
-        #     tolerance=0.01, preserve_topology=True)
-    
-        # #remove small shapes
-        # country_boundaries['geometry'] = country_boundaries.apply(
-        #     remove_small_shapes, axis=1)
-        
-        # #saving national outline
-        # filename = 'national_outline.shp'
-        # path_out = os.path.join('data', 'processed', iso3, 'national', filename)
-        # if not os.path.exists(path_out):
-        #     os.makedirs(path_out)
-        # country_boundaries.to_file(path_out, crs='epsg:4326')
-
-        # #prefered gid level
-        # filename = 'gadm36_{}.shp'.format(country['gid_region'])
-        # path_in = os.path.join('data', 'raw', 'gadm36_levels_shp', filename)
-        # boundaries = geopandas.read_file(path_in)
-        # country_boundaries = boundaries[boundaries['GID_0'] == country['iso3']]
-        
-        # #set the filename depending our preferred regional level
-        # filename = "gadm36_{}.shp".format(gid_region)
-        # regions_folder_path = os.path.join('data', 'processed', iso3, 'processed_regions')
-        # if not os.path.exists(regions_folder_path):
-        #     os.makedirs(regions_folder_path)
-
-        # #this is how we simplify the geometries
-        # country_boundaries["geometry"] = country_boundaries.geometry.simplify(
-        #     tolerance=0.01, preserve_topology=True)
-    
-        # #remove small shapes
-        # country_boundaries['geometry'] = country_boundaries.apply(
-        #     remove_small_shapes, axis=1)
-                                        
-        # #set the filename depending our preferred regional level
-        # filename = "gadm36_{}.shp".format(gid_region)
-
-        # #saving gid region boundaries
-        # path_out = os.path.join('data', 'processed', iso3,'gid_region', filename)
-        # if not os.path.exists(path_out):
-        #     os.makedirs(path_out)
-        # country_boundaries.to_file(path_out, crs='epsg:4326')
-    
-        # print("Processed country boundary for {}".format(country['iso3']))
