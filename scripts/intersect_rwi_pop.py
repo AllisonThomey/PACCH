@@ -15,7 +15,7 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 def intersect_rwi_pop(country, region):
     """
     This function creates an intersect between the 
-    relative wealth index and population.
+    relative wealth index and population in hazard zone.
     
     """
     #assigning variables
@@ -24,10 +24,9 @@ def intersect_rwi_pop(country, region):
     gid_level = 'GID_{}'.format(gid_region)
     gid_id = region[gid_level]
 
-
-    #load in population by region .shp file
-    filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
-    path_pop = os.path.join(BASE_PATH, 'processed', iso3 , 'population', filename_pop)
+  #now we write out path at the regional level
+    filename = '{}'.format(gid_id) #each regional file is named using the gid id
+    path_pop= os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', filename)
     gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
 
 
@@ -41,7 +40,7 @@ def intersect_rwi_pop(country, region):
 
     #now we write out path at the regional level
     filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop')
+    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
 
     path_out = os.path.join(folder_out, filename_out)
     if not os.path.exists(path_out):
