@@ -1,58 +1,34 @@
-#preprocessing for rwi in LMICs
+#making rwi points into voronoi polygons
 import os
-import json
-import rasterio
 from rasterio.mask import mask
 import pandas
 import geopandas as gpd
+import numpy as np
 import configparser
+from shapely.ops import cascaded_union
+from geovoronoi import voronoi_regions_from_coords, points_to_coords
+from shapely.geometry import Point, LineString, Polygon
 
 CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
 BASE_PATH = CONFIG['file_locations']['base_path']
 
-def process_rwi_geometry(country):
+
+
+def create_rwi_voronoi(country, region):
     """
-
-    Adds geometry column into .csv data to make use of latitude and longitude easier
-
-    """
-    #assigning variables
-    iso3 = country["iso3"]
-
-    #path in for rwi files
-    filename = '{}_relative_wealth_index.csv'.format(iso3)
-    path_rwi = os.path.join(BASE_PATH,'raw','rwi', filename)
-    wealth = gpd.read_file(path_rwi, encoding='latin-1')
-
-    #making long lat points into geometry column
-    gdf = gpd.GeoDataFrame(
-        wealth, geometry=gpd.points_from_xy(wealth.longitude, wealth.latitude), crs="EPSG:4326"
-    )  
-
-    #setting path out
-    filename_out = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
-    if not os.path.exists(folder_out):
-        os.makedirs(folder_out)
-    path_out = os.path.join(folder_out, filename_out)
-
-    #saving new .csv to location
-    gdf.to_file(path_out,crs="EPSG:4326")
-    
-    return
-
-
-
-def process_regional_rwi(country, region):
-    """
-    creates relative wealth estimates .shp file by region
+    creates rwi voronoi polygons by region
 
     """
     iso3 = country['iso3']                 
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
-    gid_id = region[gid_level]
+    gid_id = region[gid_level]   
+    
+    #load in rwi as gdf
+    filename = '{}.shp'.format(gid_id)
+    path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
+    gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
 
     #loading in gid level shape file
     filename = "gadm36_{}.shp".format(gid_region)
@@ -60,24 +36,39 @@ def process_regional_rwi(country, region):
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
 
-    #loading in rwi info
-    filename = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder= os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
-    path_rwi= os.path.join(folder, filename)
-    gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
+    boundary_shape = cascaded_union(gdf_region.geometry)
+    coords = points_to_coords(gdf_rwi.geometry)
 
-    #https://stackoverflow.com/questions/30405652/how-to-find-which-points-intersect-with-a-polygon-in-geopandas
-    gdf_rwi = gpd.overlay(gdf_rwi, gdf_region, how='intersection')
+    region_polys, region_pts = voronoi_regions_from_coords(coords, boundary_shape)
 
-    filename = '{}.shp'.format(gid_id)
+
+    interim = []
+    for key, value in region_polys.items():
+        for idx, rwi in gdf_rwi.iterrows():
+            if value.intersects(rwi['geometry']):
+                interim.append({ 
+                    'type': 'Polygon',
+                    'geometry': value,
+                    'properties': {
+                        "rwi": rwi['rwi'],
+                        'error': rwi['error']
+                    }
+                })
+    output = gpd.GeoDataFrame.from_features(interim, crs="EPSG:4326")
+
+
+    filename = 'voronoi_{}.shp'.format(gid_id)
     folder_out = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions' )
     if not os.path.exists(folder_out):
         os.makedirs(folder_out)
     path_out = os.path.join(folder_out, filename)
 
-    gdf_rwi.to_file(path_out, crs="EPSG:4326")
+    output.to_file(path_out, crs="EPSG:4326")
+
 
     return
+
+
 
 
 
@@ -92,8 +83,6 @@ if __name__ == "__main__":
             continue
 
         iso3 = country['iso3'] 
-
-        # process_rwi_geometry(country)
 
         #define our country-specific parameters, including gid information
     
@@ -114,4 +103,4 @@ if __name__ == "__main__":
                 continue
 
             print("working on {}".format(region[gid_level]))
-            process_regional_rwi(country, region)
+            create_rwi_voronoi(country, region)

@@ -15,7 +15,7 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 def intersect_rwi_pop(country, region):
     """
     This function creates an intersect between the 
-    relative wealth index and population in hazard zone.
+    relative wealth index and vulnerable population.
     
     """
     #assigning variables
@@ -31,7 +31,7 @@ def intersect_rwi_pop(country, region):
 
 
     #load in hazard .shp file
-    filename = '{}.shp'.format(gid_id)
+    filename = 'voronoi_{}.shp'.format(gid_id)
     path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
     gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
 
