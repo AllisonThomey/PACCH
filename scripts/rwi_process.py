@@ -115,8 +115,3 @@ if __name__ == "__main__":
 
             print("working on {}".format(region[gid_level]))
             process_regional_rwi(country, region)
-
-
-
-
-
