@@ -38,6 +38,9 @@ def intersect_rwi_pop(country, region):
 
     gdf_pop_rwi = gpd.overlay(gdf_rwi, gdf_pop, how='intersection')
 
+    gdf_pop_rwi=gdf_pop_rwi.rename(columns = {'value_1':'population'})
+    gdf_pop_rwi=gdf_pop_rwi.rename(columns = {'value_2':'flood_depth'})
+
     #now we write out path at the regional level
     filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
     folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
@@ -45,6 +48,7 @@ def intersect_rwi_pop(country, region):
     path_out = os.path.join(folder_out, filename_out)
     if not os.path.exists(path_out):
         os.makedirs(path_out)
+        
     gdf_pop_rwi.to_file(path_out, crs='epsg:4326')
 
 
@@ -81,8 +85,6 @@ if __name__ == "__main__":
         
         for idx, region in regions.iterrows():
 
-            if not region[gid_level] == 'BGD.1.5_1':
-                continue
             
             print("working on {}".format(region[gid_level]))
             intersect_rwi_pop(country, region)
