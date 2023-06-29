@@ -39,15 +39,25 @@ def intersect_hazard_pop(country, region):
 
 
     gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
+    
+    #covered area / total area for % of area covered
+    coverage = gdf_affected.area/gdf_pop.area
+    #population tile * percent covered
+    vul_pop = gdf_pop['value']*coverage
+  
+    gdf_affected['vul_pop'] = vul_pop
+   
+    total = vul_pop.sum()
+    print(total)
 
-    #now we write out path at the regional level
-    filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
+    # #now we write out path at the regional level
+    # filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
+    # folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
 
-    path_out = os.path.join(folder_out, filename_out)
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
-    gdf_affected.to_file(path_out, crs='epsg:4326')
+    # path_out = os.path.join(folder_out, filename_out)
+    # if not os.path.exists(path_out):
+    #     os.makedirs(path_out)
+    # gdf_affected.to_file(path_out, crs='epsg:4326')
 
 
 
