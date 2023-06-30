@@ -29,35 +29,31 @@ def intersect_hazard_pop(country, region):
     filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
     path_pop = os.path.join(BASE_PATH, 'processed', iso3 , 'population', filename_pop)
     gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
-
+    gdf_pop = gdf_pop.to_crs('epsg:3857')
 
     #load in hazard .shp file
     filename_hazard = '{}.shp'.format(gid_id)
     path_hazard = os.path.join(BASE_PATH, 'processed', iso3 , 'hazards', 
                                'inuncoast', gid_id, filename_hazard)
     gdf_hazard = gpd.read_file(path_hazard, crs="EPSG:4326")
-
+    gdf_hazard = gdf_hazard.to_crs('epsg:3857')
 
     gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
-    
-    #covered area / total area for % of area covered
-    coverage = gdf_affected.area/gdf_pop.area
-    #population tile * percent covered
-    vul_pop = gdf_pop['value']*coverage
+
+
+    # area to 1 km
+    gdf_affected['area_km2'] = gdf_affected['geometry'].area/ 1e6
+    gdf_affected['pop_est'] = gdf_affected['value_1']* gdf_affected['area_km2']
   
-    gdf_affected['vul_pop'] = vul_pop
-   
-    total = vul_pop.sum()
-    print(total)
 
-    # #now we write out path at the regional level
-    # filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-    # folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
+    #now we write out path at the regional level
+    filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
+    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
 
-    # path_out = os.path.join(folder_out, filename_out)
-    # if not os.path.exists(path_out):
-    #     os.makedirs(path_out)
-    # gdf_affected.to_file(path_out, crs='epsg:4326')
+    path_out = os.path.join(folder_out, filename_out)
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
+    gdf_affected.to_file(path_out, crs='epsg:4326')
 
 
 
