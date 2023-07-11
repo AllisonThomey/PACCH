@@ -134,17 +134,22 @@ def process_regional_hazard (country, region):
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
-   
-    gdf_hazard = gpd.overlay(gdf_hazard, gdf_region, how='intersection')
 
-    #now we write out at the regional level
-    filename_out = '{}.shp'.format(gid_id)
-    folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
 
-    path_out = os.path.join(folder_out, filename_out)
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
-    gdf_hazard.to_file(path_out, crs='epsg:4326')
+    for regions in gdf_region.iterrows():
+    
+        gdf_hazard = gpd.overlay(gdf_hazard, gdf_region, how='intersection')
+        if len(gdf_hazard)==0:
+            continue
+        #now we write out at the regional level
+        filename_out = '{}.shp'.format(gid_id)
+        folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
+
+        path_out = os.path.join(folder_out, filename_out)
+        if not os.path.exists(path_out):
+            os.makedirs(path_out)
+
+        gdf_hazard.to_file(path_out, crs='epsg:4326')
 
 
     return
@@ -178,16 +183,13 @@ if __name__ == "__main__":
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
         
-        print("Working on process_national_hazard for {}".format(iso3))
-        process_national_hazard(country)
+        # print("Working on process_national_hazard for {}".format(iso3))
+        # process_national_hazard(country)
        
         
         print("Working on process_regional_hazard")
         
         for idx, region in regions.iterrows():
-
-            if not region[gid_level] == 'BGD.1.5_1':
-                continue
             
        
             process_regional_hazard(country, region)

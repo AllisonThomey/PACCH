@@ -110,8 +110,6 @@ if __name__ == "__main__":
 
         for idx, region in regions.iterrows():
             
-            if not region[gid_level] == 'BGD.1.5_1':
-                continue
 
             print("working on {}".format(region[gid_level]))
             process_regional_rwi(country, region)

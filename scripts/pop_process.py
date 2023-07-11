@@ -184,7 +184,5 @@ if __name__ == "__main__":
         
         for idx, region in regions.iterrows():
 
-            if not region[gid_level] == 'BGD.1.5_1':
-                continue
             
             process_regional_population(country, region)
