@@ -5,6 +5,11 @@ import rasterio
 from rasterio.mask import mask
 import pandas
 import geopandas as gpd
+import configparser
+
+CONFIG = configparser.ConfigParser()
+CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
+BASE_PATH = CONFIG['file_locations']['base_path']
 
 def process_national_hazard(country):
     """
@@ -59,8 +64,6 @@ def process_national_hazard(country):
     with rasterio.open(path_hazard, "w", **out_meta) as dest:
         dest.write(out_img)
     #done cutting out .tif to boundary file
-
-
     #set up file system for .shp
     filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.shp'
     folder= os.path.join('data','processed',iso3, 'hazards', 'inuncoast', 'national')
@@ -109,12 +112,9 @@ def process_national_hazard(country):
     return
 
 
-
-
 def process_regional_hazard (country, region):
     """
     This function creates a regional hazard .tif
-
 
     """
     #assigning variables
@@ -122,7 +122,6 @@ def process_regional_hazard (country, region):
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
     gid_id = region[gid_level]
-
 
     #loading in hazard .shp
     filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.shp' 
@@ -134,23 +133,23 @@ def process_regional_hazard (country, region):
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
-   
-    gdf_hazard = gpd.overlay(gdf_hazard, gdf_region, how='intersection')
+
+    
+    for idx, region in gdf_region.iterrows():
+        gdf_hazard_int = gpd.overlay(gdf_hazard, gdf_region, how='intersection')
+        if len(gdf_hazard_int) == 0:
+            continue
 
     #now we write out at the regional level
-    filename_out = '{}.shp'.format(gid_id)
-    folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
+        filename_out = '{}.shp'.format(gid_id)
+        folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
 
-    path_out = os.path.join(folder_out, filename_out)
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
-    gdf_hazard.to_file(path_out, crs='epsg:4326')
-
+        path_out = os.path.join(folder_out, filename_out)
+        if not os.path.exists(path_out):
+            os.makedirs(path_out)
+        gdf_hazard_int.to_file(path_out, crs='epsg:4326')
 
     return
-
-
-
 
 
 if __name__ == "__main__":
@@ -160,7 +159,6 @@ if __name__ == "__main__":
 
     for idx, country in countries.iterrows():
 
- 
         if not country['iso3'] =='BGD':
             continue
         
@@ -169,6 +167,12 @@ if __name__ == "__main__":
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
         
+        #loading in coastal lookup list
+        filename = 'coastal_lookup.csv'
+        folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
+        path_coast= os.path.join(folder, filename)
+        coastal = pandas.read_csv(path_coast)
+        coast_list = coastal['gid_id'].values. tolist()
 
         #set the filename depending our preferred regional level
         filename = "gadm36_{}.shp".format(gid_region)
@@ -180,15 +184,12 @@ if __name__ == "__main__":
         
         print("Working on process_national_hazard for {}".format(iso3))
         process_national_hazard(country)
-       
         
         print("Working on process_regional_hazard")
         
         for idx, region in regions.iterrows():
-
-            if not region[gid_level] == 'BGD.1.5_1':
+            if not region[gid_level] in coast_list:
                 continue
-            
-       
+
             process_regional_hazard(country, region)
 
