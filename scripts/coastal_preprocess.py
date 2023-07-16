@@ -12,6 +12,7 @@ BASE_PATH = CONFIG['file_locations']['base_path']
 
 path = os.path.join('data', 'countries.csv')
 countries = pandas.read_csv(path, encoding='latin-1')
+countries = countries.to_dict('records')
 
 filename = 'coastal_buffer.shp'
 folder_out = os.path.join(BASE_PATH, 'processed')
@@ -33,8 +34,9 @@ if not os.path.exists(path_coastal):
 else: 
     gdf_coastal = gpd.read_file(path_coastal, crs = 'epsg:3857')
 
-     
-for idx, country in tqdm(countries.iterrows(), total = countries.shape[0]):
+coast_dict = gdf_coastal.to_dict("records")
+
+for country in tqdm(countries):
    
     if not country['iso3'] =='BGD':
         continue
@@ -48,14 +50,15 @@ for idx, country in tqdm(countries.iterrows(), total = countries.shape[0]):
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region.to_crs('epsg:3857')
+    region_dict = gdf_region.to_dict('records')
     
     my_shp = []
     my_csv = []
     # my_set = set()
 
-    for idx, region in gdf_region.iterrows():
+    for region in region_dict:
         
-        for idx, coast in gdf_coastal.iterrows():
+        for coast in coast_dict:
              
             if region['geometry'].intersects(coast['geometry']):
                     my_shp.append({

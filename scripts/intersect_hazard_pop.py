@@ -66,8 +66,9 @@ if __name__ == "__main__":
 
     path = os.path.join('data', 'countries.csv')
     countries = pandas.read_csv(path, encoding='latin-1')
+    countries = countries.to_dict('records')
 
-    for idx, country in countries.iterrows():
+    for country in countries:
 
         if not country['iso3'] =='BGD':
             continue
@@ -91,8 +92,9 @@ if __name__ == "__main__":
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
+        region_dict = regions.to_dict('records')
         
-        for idx, region in regions.iterrows():
+        for region in region_dict:
             if not region[gid_level] in coast_list:
                 continue
             intersect_hazard_pop(country, region)

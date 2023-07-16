@@ -158,7 +158,9 @@ if __name__ == "__main__":
     path = os.path.join('data', 'countries.csv')
     countries = pandas.read_csv(path, encoding='latin-1')
 
-    for idx, country in countries.iterrows():
+    countries = countries.to_dict('records')
+
+    for country in countries:
 
         if not country['iso3'] =='BGD':
             continue
@@ -181,12 +183,15 @@ if __name__ == "__main__":
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
-        
+        region_dict = regions.to_dict('records')
+
         print("Working on process_national_population")
         process_national_population(country)
 
-        print("Working on process_regional_population")                
-        for idx, region in regions.iterrows():
+        print("Working on process_regional_population")  
+
+        for region in region_dict:
             if not region[gid_level] in coast_list:
                 continue
+            
             process_regional_population(country, region)
