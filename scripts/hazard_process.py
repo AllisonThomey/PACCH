@@ -133,9 +133,9 @@ def process_regional_hazard (country, region):
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
-
+    region_dict = gdf_region.to_dict('records')
     
-    for idx, region in gdf_region.iterrows():
+    for region in region_dict:
         gdf_hazard_int = gpd.overlay(gdf_hazard, gdf_region, how='intersection')
         if len(gdf_hazard_int) == 0:
             continue

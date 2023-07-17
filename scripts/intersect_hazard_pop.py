@@ -28,14 +28,14 @@ def intersect_hazard_pop(country, region):
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+    region_dict = gdf_region.to_dict('records')
 
     #load in population by region .shp file
     filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
     path_pop = os.path.join(BASE_PATH, 'processed', iso3 , 'population', filename_pop)
     gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
 
-
-    for idx, region in gdf_region.iterrows():
+    for region in region_dict:
 
     #load in hazard .shp file
         filename_hazard = '{}.shp'.format(gid_id)
@@ -45,7 +45,6 @@ def intersect_hazard_pop(country, region):
             continue
         gdf_hazard = gpd.read_file(path_hazard, crs="EPSG:4326")
     
-
         gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
         if len(gdf_affected) == 0:
             continue
