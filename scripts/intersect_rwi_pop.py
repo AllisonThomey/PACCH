@@ -28,7 +28,8 @@ def intersect_rwi_pop(country, region):
     filename = '{}.shp'.format(gid_id)
     path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
     gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
-
+    gdf_rwi = gdf_rwi.to_crs('epsg:3857')
+    
     filename = "gadm36_{}.shp".format(gid_region)
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
@@ -41,6 +42,7 @@ def intersect_rwi_pop(country, region):
         if not os.path.exists(path_pop):
             continue
         gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
+        gdf_pop = gdf_pop.to_crs('epsg:3857')
 
         gdf_pop_rwi = gpd.overlay(gdf_rwi, gdf_pop, how='intersection')
         if len(gdf_pop_rwi) == 0:
@@ -94,5 +96,6 @@ if __name__ == "__main__":
         for region in region_dict:
             if not region[gid_level] in coast_list:
                 continue
+
             print("working on {}".format(region[gid_level]))
             intersect_rwi_pop(country, region)

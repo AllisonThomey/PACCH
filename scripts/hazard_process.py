@@ -182,6 +182,7 @@ if __name__ == "__main__":
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
+
         region_dict = regions.to_dict('records')
 
         print("Working on process_national_hazard for {}".format(iso3))
@@ -192,6 +193,5 @@ if __name__ == "__main__":
         for region in region_dict:
             if not region[gid_level] in coast_list:
                 continue
-
             process_regional_hazard(country, region)
 
