@@ -5,14 +5,21 @@ import rasterio
 from rasterio.mask import mask
 import pandas
 import geopandas as gpd
+import configparser
+from tqdm import tqdm
+
+
+CONFIG = configparser.ConfigParser()
+CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
+BASE_PATH = CONFIG['file_locations']['base_path']
+
 
 def process_national_population(country):
     """
     This function creates a national population .shp
 
     """
-
-
+    
     iso3 = country['iso3']
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
@@ -61,7 +68,6 @@ def process_national_population(country):
         dest.write(out_img)
     #done cutting out .tif to boundary file
 
-
     #set up file system for .shp
     filename = 'ppp_2020_1km_Aggregated.shp'
     folder= os.path.join('data','processed',iso3, 'population', 'national')
@@ -107,10 +113,7 @@ def process_national_population(country):
     output = gpd.GeoDataFrame.from_features(output, crs='epsg:4326')
     output.to_file(path_out, driver='ESRI Shapefile')
     
-
     return  
-
-
 
 
 def process_regional_population(country, region):
@@ -147,11 +150,7 @@ def process_regional_population(country, region):
         os.makedirs(path_out)
     gdf_pop.to_file(path_out, crs='epsg:4326')
 
-    
     return
-
-
-
 
 
 if __name__ == "__main__":
@@ -159,7 +158,9 @@ if __name__ == "__main__":
     path = os.path.join('data', 'countries.csv')
     countries = pandas.read_csv(path, encoding='latin-1')
 
-    for idx, country in countries.iterrows():
+    countries = countries.to_dict('records')
+
+    for country in countries:
 
         if not country['iso3'] =='BGD':
             continue
@@ -169,6 +170,12 @@ if __name__ == "__main__":
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
         
+        filename = 'coastal_lookup.csv'
+        folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
+        path_coast= os.path.join(folder, filename)
+        coastal = pandas.read_csv(path_coast)
+        coast_list = coastal['gid_id'].values. tolist()
+
         #set the filename depending our preferred regional level
         filename = "gadm36_{}.shp".format(gid_region)
         folder = os.path.join('data','processed', iso3, 'gid_region')
@@ -176,13 +183,15 @@ if __name__ == "__main__":
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
-        
+        region_dict = regions.to_dict('records')
+
         print("Working on process_national_population")
         process_national_population(country)
 
-        print("Working on process_regional_population")
-        
-        for idx, region in regions.iterrows():
+        print("Working on process_regional_population")  
 
+        for region in region_dict:
+            if not region[gid_level] in coast_list:
+                continue
             
             process_regional_population(country, region)

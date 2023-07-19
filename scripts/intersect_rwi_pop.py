@@ -24,13 +24,19 @@ def intersect_rwi_pop(country, region):
     gid_level = 'GID_{}'.format(gid_region)
     gid_id = region[gid_level]
 
+    #load in hazard .shp file
+    filename = '{}.shp'.format(gid_id)
+    path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
+    gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
+    gdf_rwi = gdf_rwi.to_crs('epsg:3857')
+    
     filename = "gadm36_{}.shp".format(gid_region)
     path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+    region_dict = gdf_region.to_dict('records')
 
-    for regions in gdf_region.iterrows():
-    #now we write out path at the regional level
+    for region in region_dict:
         filename = '{}'.format(gid_id) #each regional file is named using the gid id
         path_pop= os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', filename)
         if not os.path.exists(path_pop):
@@ -38,23 +44,11 @@ def intersect_rwi_pop(country, region):
         gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
         gdf_pop = gdf_pop.to_crs('epsg:3857')
 
-
-        #load in hazard .shp file
-        filename = '{}.shp'.format(gid_id)
-        path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
-        if not os.path.exists(path_rwi):
-            continue
-        gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
-        gdf_rwi = gdf_rwi.to_crs('epsg:3857')
-
-
         gdf_pop_rwi = gpd.overlay(gdf_rwi, gdf_pop, how='intersection')
-        if len(gdf_pop_rwi)==0:
+        if len(gdf_pop_rwi) == 0:
             continue
-
-        gdf_pop_rwi=gdf_pop_rwi.rename(columns = {'value_1':'population'})
+        gdf_pop_rwi = gdf_pop_rwi.rename(columns = {'value_1':'population'})
         gdf_pop_rwi=gdf_pop_rwi.rename(columns = {'value_2':'flood_depth'})
-
         #now we write out path at the regional level
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
         folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
@@ -64,20 +58,17 @@ def intersect_rwi_pop(country, region):
             os.makedirs(path_out)
         gdf_pop_rwi.to_file(path_out, crs='epsg:4326')
 
-
-
     return
-
 
 
 if __name__ == "__main__":
 
     path = os.path.join('data', 'countries.csv')
     countries = pandas.read_csv(path, encoding='latin-1')
+    countries = countries.to_dict('records')
 
-    for idx, country in countries.iterrows():
+    for country in countries:
 
- 
         if not country['iso3'] =='BGD':
             continue
         
@@ -86,6 +77,12 @@ if __name__ == "__main__":
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
         
+        #loading in coastal lookup list
+        filename = 'coastal_lookup.csv'
+        folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
+        path_coast= os.path.join(folder, filename)
+        coastal = pandas.read_csv(path_coast)
+        coast_list = coastal['gid_id'].values. tolist()
 
         #set the filename depending our preferred regional level
         filename = "gadm36_{}.shp".format(gid_region)
@@ -94,10 +91,11 @@ if __name__ == "__main__":
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')#[:2]
+        region_dict = regions.to_dict('records')
         
-        
-        for idx, region in regions.iterrows():
+        for region in region_dict:
+            if not region[gid_level] in coast_list:
+                continue
 
-            
             print("working on {}".format(region[gid_level]))
             intersect_rwi_pop(country, region)
