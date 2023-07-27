@@ -16,27 +16,37 @@ def process_rwi_geometry(country):
     Adds geometry column into .csv data to make use of latitude and longitude easier
     """
     #assigning variables
-    iso3 = country["iso3"]
+    iso3 = country['iso3']
+    gid_region = country['gid_region']
+    gid_level = 'GID_{}'.format(gid_region)
 
-    #path in for rwi files
-    filename = '{}_relative_wealth_index.csv'.format(iso3)
-    path_rwi = os.path.join(BASE_PATH,'raw','rwi', filename)
-    wealth = gpd.read_file(path_rwi, encoding='latin-1')
+    path = os.path.join('data', 'countries.csv')
+    countries = pandas.read_csv(path, encoding='latin-1')
+    countries = countries.to_dict('records')
 
-    #making long lat points into geometry column
-    gdf = gpd.GeoDataFrame(
-        wealth, geometry=gpd.points_from_xy(wealth.longitude, wealth.latitude), crs="EPSG:4326"
-    )  
+    for country in countries:
 
-    #setting path out
-    filename_out = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
-    if not os.path.exists(folder_out):
-        os.makedirs(folder_out)
-    path_out = os.path.join(folder_out, filename_out)
+        #path in for rwi files
+        filename = '{}_relative_wealth_index.csv'.format(iso3)
+        path_rwi = os.path.join(BASE_PATH,'raw','rwi', filename)
+        if not os.path.exists(path_rwi):
+            continue 
+        wealth = gpd.read_file(path_rwi, encoding='latin-1')
 
-    #saving new .csv to location
-    gdf.to_file(path_out,crs="EPSG:4326")
+        #making long lat points into geometry column
+        gdf = gpd.GeoDataFrame(
+            wealth, geometry=gpd.points_from_xy(wealth.longitude, wealth.latitude), crs="EPSG:4326"
+        )  
+
+        #setting path out
+        filename_out = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
+        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
+        if not os.path.exists(folder_out):
+            os.makedirs(folder_out)
+        path_out = os.path.join(folder_out, filename_out)
+
+        #saving new .csv to location
+        gdf.to_file(path_out,crs="EPSG:4326")
     
     return
 
@@ -58,13 +68,16 @@ def process_regional_rwi(country, region):
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
     region_dict = gdf_region.to_dict('records')
 
-    #loading in rwi info
-    filename = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
-    folder= os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
-    path_rwi= os.path.join(folder, filename)
-    gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
-
     for region in region_dict:
+
+    #loading in rwi info
+        filename = '{}_relative_wealth_index.shp'.format(iso3) #each regional file is named using the gid id
+        folder= os.path.join(BASE_PATH, 'processed', iso3 , 'rwi', 'national')
+        path_rwi= os.path.join(folder, filename)
+        if not os.path.exists(path_rwi):
+            continue
+        gdf_rwi = gpd.read_file(path_rwi, crs="EPSG:4326")
+
         gdf_rwi_int = gpd.overlay(gdf_rwi, gdf_region, how='intersection')
         if len(gdf_rwi_int) == 0:
             continue
@@ -88,12 +101,10 @@ if __name__ == "__main__":
 
     for country in countries:
 
-        if not country["iso3"] == 'BGD':
+        if country["Exclude"] == 1:
             continue
 
         iso3 = country['iso3'] 
-
-        # process_rwi_geometry(country)
         #define our country-specific parameters, including gid information
     
         gid_region = country['gid_region']
@@ -103,17 +114,21 @@ if __name__ == "__main__":
         filename = 'coastal_lookup.csv'
         folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
         path_coast= os.path.join(folder, filename)
+        if not os.path.exists(path_coast):
+            continue
         coastal = pandas.read_csv(path_coast)
         coast_list = coastal['gid_id'].values. tolist()
 
         #set the filename depending our preferred regional level
         filename = "gadm36_{}.shp".format(gid_region)
         folder = os.path.join('data','processed', iso3, 'gid_region')
-        
         #then load in our regions as a geodataframe
         path_regions = os.path.join(folder, filename)
         regions = gpd.read_file(path_regions, crs='epsg:4326')
         region_dict = regions.to_dict('records')
+
+        print("Working on {}".format(iso3))
+        process_rwi_geometry(country)
 
         for region in region_dict:
             if not region[gid_level] in coast_list:

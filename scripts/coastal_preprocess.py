@@ -26,8 +26,7 @@ if not os.path.exists(path_coastal):
     gdf_coastal = gdf_coastal.to_crs('epsg:3857')
 
     gdf_coastal['geometry'] = gdf_coastal['geometry'].boundary
-    # if gdf_coastal['geometry'].is_empty:
-    #     continue
+
     gdf_coastal['geometry'] = gdf_coastal['geometry'].buffer(1e5)
 
     gdf_coastal.to_file(path_coastal)
@@ -37,10 +36,10 @@ else:
 coast_dict = gdf_coastal.to_dict("records")
 
 for country in tqdm(countries):
-   
-    if not country['iso3'] =='BGD':
-        continue
 
+    if country['Exclude'] == 1:
+        continue
+    
     iso3 = country["iso3"]
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
@@ -57,22 +56,24 @@ for country in tqdm(countries):
     # my_set = set()
 
     for region in region_dict:
-        
+        if region['geometry'] == None:
+            continue
         for coast in coast_dict:
-             
+
             if region['geometry'].intersects(coast['geometry']):
+
                     my_shp.append({
                         'geometry': region['geometry'],
                         'properties': {
-                        'gid_id': region[gid_level]
+                        'gid_id': region[gid_level],
+                        'iso3': iso3
                         }
                     })
                     my_csv.append({
-                        'gid_id': region[gid_level]
+                        'gid_id': region[gid_level],
+                        'iso3': iso3
                     })
-                    # my_set.add(region[gid_level]
-                    # )
-    
+
     if len(my_shp) == 0:
         continue  
 
