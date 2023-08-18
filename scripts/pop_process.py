@@ -124,28 +124,39 @@ def process_regional_population(country, region):
     gid_level = 'GID_{}'.format(gid_region)
     gid_id = region[gid_level]
 
-    filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-    folder_out = os.path.join('data', 'processed', iso3 , 'v2_population')
-    path_out = os.path.join(folder_out, filename_out)
-
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
-        #loading in national population file
-        filename = 'ppp_2020_1km_Aggregated.shp' #each regional file is named using the gid id
-        folder= os.path.join('data', 'processed', iso3 , 'population', 'national')
-        path_pop = os.path.join(folder, filename)
-        # if not os.path.exists(path_pop):
-        #     continue
-        gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
-        
-        #prefered GID level
-        filename = "gadm36_{}.shp".format(gid_region)
-        path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
-        gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
-        gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+    filename = "gadm36_{}.shp".format(gid_region)
+    path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
+    gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
+    gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+    region_dict = gdf_region.to_dict('records')
     
-        gdf_pop = gpd.overlay(gdf_pop, gdf_region, how='intersection')
-        gdf_pop.to_file(path_out, crs='epsg:4326')
+    for region in region_dict:
+
+        filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
+        folder_out = os.path.join('data', 'processed', iso3 , 'v2_population')
+        path_out = os.path.join(folder_out, filename_out)
+
+        if not os.path.exists(path_out):
+
+            #loading in national population file
+            filename = 'ppp_2020_1km_Aggregated.shp' #each regional file is named using the gid id
+            folder= os.path.join('data', 'processed', iso3 , 'population', 'national')
+            path_pop = os.path.join(folder, filename)
+            # if not os.path.exists(path_pop):
+            #     continue
+            gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
+            
+            #prefered GID level
+            filename = "gadm36_{}.shp".format(gid_region)
+            path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
+            gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
+            gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+        
+            gdf_pop = gpd.overlay(gdf_pop, gdf_region, how='intersection')
+            if len(gdf_pop) == 0:
+                continue
+            os.makedirs(path_out)
+            gdf_pop.to_file(path_out, crs='epsg:4326')
 
     return
 
@@ -159,8 +170,6 @@ if __name__ == "__main__":
     for country in countries:
 
         if country['Exclude'] == 1:
-            continue
-        if not country ['iso3'] == 'ARG':
             continue
         
         # #define our country-specific parameters, including gid information

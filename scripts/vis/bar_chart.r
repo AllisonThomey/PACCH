@@ -1,7 +1,7 @@
 library(tidyverse)
 
 folder <- dirname(rstudioapi::getSourceEditorContext()$path)
-data <- read.csv(file.path('data', 'processed', 'results', 'csv', 'global_vul_pop.csv'))
+data <- read.csv(file.path('data', 'processed', 'results', 'csv', 'all_global_vul_pop.csv'))
 
 
 #  #then plot
