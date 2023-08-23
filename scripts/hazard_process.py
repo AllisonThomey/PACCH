@@ -120,7 +120,7 @@ def process_national_hazard(country):
     return
 
 
-def process_regional_hazard (country, region):
+def process_regional_hazard(country, region):
     """
     This function creates a regional hazard .tif
 

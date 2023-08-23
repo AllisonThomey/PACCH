@@ -17,6 +17,7 @@ countries = countries.to_dict('records')
 filename = 'coastal_buffer.shp'
 folder_out = os.path.join(BASE_PATH, 'processed')
 path_coastal = os.path.join(folder_out, filename)
+
 if not os.path.exists(path_coastal):
     
     #loading in coastline file
@@ -39,7 +40,10 @@ for country in tqdm(countries):
 
     if country['Exclude'] == 1:
         continue
-    
+
+    if not country['iso3'] == 'BGD':
+        continue
+
     iso3 = country["iso3"]
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)

@@ -18,6 +18,14 @@ All data utilized are open-source. The following datasets are required to run th
 - WRI Aqueduct coastal flooding hazard layers for the RISES-AM model 
 
 
+Getting Started 
+---------------
+To begin working with the codebase you will need to run the following scripts (in this order):
+
+- preprocessing.py 
+- run.py
+
+
 Contributors
 ------------
 - Allison Thomey
