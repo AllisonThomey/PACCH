@@ -180,28 +180,28 @@ def intersect_hazard_pop(country, region):
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
         folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
         path_out = os.path.join(folder_out, filename_out)
+        # if not os.path.exists(path_out):
+        #     os.makedirs(path_out)
+        gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
+        if len(gdf_affected) == 0:
+            continue
+
+        gdf_affected = gdf_affected.to_crs('epsg:3857')
+
+        # area to 1 km
+        gdf_affected['area_km2'] = gdf_affected['geometry'].area / 1e6
+        gdf_affected['pop_est'] = gdf_affected['value_1']* gdf_affected['area_km2']
+    
+        gdf_affected = gdf_affected.to_crs('epsg:4326')
+
+        # now we write out path at the regional level
+        filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
+        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
+
+        path_out = os.path.join(folder_out, filename_out)
         if not os.path.exists(path_out):
             os.makedirs(path_out)
-            gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
-            if len(gdf_affected) == 0:
-                continue
-
-            gdf_affected = gdf_affected.to_crs('epsg:3857')
-
-            # area to 1 km
-            gdf_affected['area_km2'] = gdf_affected['geometry'].area / 1e6
-            gdf_affected['pop_est'] = gdf_affected['value_1']* gdf_affected['area_km2']
-        
-            gdf_affected = gdf_affected.to_crs('epsg:4326')
-
-            #now we write out path at the regional level
-            # filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-            # folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
-
-            # path_out = os.path.join(folder_out, filename_out)
-            # if not os.path.exists(path_out):
-            #     os.makedirs(path_out)
-            gdf_affected.to_file(path_out, crs='epsg:4326')
+        gdf_affected.to_file(path_out, crs='epsg:4326')
 
     return
 
@@ -251,13 +251,6 @@ def intersect_rwi_pop(country, region):
                 continue
             gdf_pop_rwi = gdf_pop_rwi.rename(columns = {'value_1':'population'})
             gdf_pop_rwi=gdf_pop_rwi.rename(columns = {'value_2':'flood_depth'})
-            #now we write out path at the regional level
-            # filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-            # folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
-
-            # path_out = os.path.join(folder_out, filename_out)
-            # if not os.path.exists(path_out):
-            # os.makedirs(path_out)
             gdf_pop_rwi.to_file(path_out, crs='epsg:4326')
 
     return
@@ -275,7 +268,9 @@ if __name__ == "__main__":
             continue
         if country['income_group'] == 'HIC':
             continue
-       
+        # if not country['iso3'] == 'BGD':
+        #     continue
+
         iso3 = country['iso3']
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)

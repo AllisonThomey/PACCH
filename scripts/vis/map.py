@@ -53,19 +53,30 @@ def process_vul_pop(region):
         if not os.path.exists(folder_pop):
             continue
         gdf_pop = geopandas.read_file(folder_pop)
+        area = gdf_pop['area_km2'].sum()
         vul_pop = gdf_pop['pop_est'].sum()
         # if vul_pop < 0.01:
         #     continue
+
+        #adding total original population from worldpop for each region
+        filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
+        folder_pop = os.path.join('data', 'processed', iso3 , 'population', filename_pop)
+        if not os.path.exists(folder_pop):
+            continue
+        og_pop = geopandas.read_file(folder_pop)
+        total_pop = og_pop['value'].sum()
 
         output.append({
             'iso3': iso3,
             'gid_id': gid_id,
             'pop_est': vul_pop,
             'income_group': income,
-            'continent': continent
+            'continent': continent,
+            'area_km2': area,
+            'total_pop':total_pop
         })
     output=pandas.DataFrame(output)
-    filename_out = 'pop_at_risk.csv'
+    filename_out = 'varifying_pop.csv'
     folder_out = os.path.join('data', 'processed', iso3 , 'csv')
     if not os.path.exists(folder_out):
         os.makedirs(folder_out)
@@ -84,10 +95,13 @@ if __name__ == "__main__":
     output = []
     for country in countries:
 
-        if country['Exclude'] == 1:
-            continue
+        # if country['Exclude'] == 1:
+        #     continue
 
-        if country['income_group'] == 'HIC':
+        # if country['income_group'] == 'HIC':
+        #     continue
+
+        if not country['iso3'] == 'ARG':
             continue
 
         iso3 = country['iso3']
@@ -111,7 +125,7 @@ if __name__ == "__main__":
             continue
 
         print('Working on {}'.format(iso3))
-        # process_vul_pop(country)
+        process_vul_pop(country)
 
         filename_in = 'pop_at_risk.csv'
         folder_in = os.path.join('data', 'processed', iso3 , 'csv')
@@ -128,51 +142,51 @@ if __name__ == "__main__":
     filename_out = 'all_global_vul_pop.csv'
     folder_out = os.path.join('data', 'processed', 'results' , 'csv')
     path_out = os.path.join(folder_out, filename_out)
-    # if not os.path.exists(path_out):
-    #     os.makedirs(path_out)
+    if not os.path.exists(path_out):
+        os.makedirs(path_out)
     output.to_csv(path_out, index = False)
-    data = pandas.read_csv(path_out)
+    # data = pandas.read_csv(path_out)
 
-    #import our boundaries data
-    filename = 'global_outline.shp'
-    path_in = os.path.join('data', 'processed', 'results', filename) 
-    boundaries = geopandas.read_file(path_in, crs="EPSG:4326")
+    # #import our boundaries data
+    # filename = 'global_outline.shp'
+    # path_in = os.path.join('data', 'processed', filename) 
+    # boundaries = geopandas.read_file(path_in, crs="EPSG:4326")
 
-    #merge population data onto our boundaries 
-    boundaries = boundaries.merge(data, left_on= 'gid_id' , right_on='gid_id')
+    # #merge population data onto our boundaries 
+    # boundaries = boundaries.merge(data, left_on= 'gid_id' , right_on='gid_id')
 
-    #define dummy value bins and then labels for each one
-    bins = [-1e6, 100, 1000, 1000000, 1e12]
-    labels = ['<100','100-1000','1000-1mil','>1mil']
+    # #define dummy value bins and then labels for each one
+    # bins = [-1e6, 100, 1000, 1000000, 1e12]
+    # labels = ['<100','100-1000','1000-1mil','>1mil']
 
-    #create a new variable with our dummy bin labels
-    boundaries['bin'] = pandas.cut(
-        boundaries['pop_est'],
-        bins=bins,
-        labels=labels
-    )
+    # #create a new variable with our dummy bin labels
+    # boundaries['bin'] = pandas.cut(
+    #     boundaries['pop_est'],
+    #     bins=bins,
+    #     labels=labels
+    # )
 
-    #open a new seaborn figure
-    sns.set(font_scale=1)
+    # #open a new seaborn figure
+    # sns.set(font_scale=1)
 
-    dimensions = (20,10)
-    fig, ax = plt.subplots(1, 1, figsize=dimensions)
-    fig.set_facecolor('gainsboro')
+    # dimensions = (20,10)
+    # fig, ax = plt.subplots(1, 1, figsize=dimensions)
+    # fig.set_facecolor('gainsboro')
 
-    #now plot our data using pandas plot
+    # #now plot our data using pandas plot
 
-    base = boundaries.plot(column='bin', ax=ax, cmap='viridis', linewidth=0, #inferno_r
-        legend=True, antialiased=False)
+    # base = boundaries.plot(column='bin', ax=ax, cmap='viridis', linewidth=0, #inferno_r
+    #     legend=True, antialiased=False)
 
-    cx.add_basemap(ax) #add the map baselayer
+    # cx.add_basemap(ax) #add the map baselayer
 
-    #allocate a plot title 
-    n = len(boundaries)
-    name = 'Population At Risk To Coastal Flooding  (n={})'.format(n)
-    fig.suptitle(name)
+    # #allocate a plot title 
+    # n = len(boundaries)
+    # name = 'Population At Risk To Coastal Flooding  (n={})'.format(n)
+    # fig.suptitle(name)
 
-    #specify where to write our .png file to
-    path = os.path.join('data', 'processed', 'figures', 'global_flood_risk.png')
-    fig.savefig(path)
-    plt.close(fig)
+    # #specify where to write our .png file to
+    # path = os.path.join('data', 'processed', 'figures', 'global_flood_risk.png')
+    # fig.savefig(path)
+    # plt.close(fig)
     

@@ -394,7 +394,7 @@ if __name__ == "__main__":
 
     output = []
 
-    for idx, country in countries:
+    for country in countries:
 
         iso3 = country['iso3']
     
@@ -402,6 +402,8 @@ if __name__ == "__main__":
             continue
         if country['income_group'] == 'HIC':
             continue
+        # if not country['iso3'] == 'BGD':
+        #     continue
 
         print("Working on {}".format(iso3))
         process_national_boundary(country)
@@ -420,42 +422,42 @@ if __name__ == "__main__":
 
 
 
-    #     gid_region = country['gid_region']
-    #     gid_level = 'GID_{}'.format(gid_region)
+        gid_region = country['gid_region']
+        gid_level = 'GID_{}'.format(gid_region)
         
-    #     #then load in our regions as a geodataframe
-    #     filename = "gadm36_{}.shp".format(gid_region)
-    #     path_region = os.path.join('data', 'processed', iso3, 'gid_region', filename)
-    #     gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
-    #     gdf_region = gdf_region.to_crs('epsg:3857')
-    #     region_dict = gdf_region.to_dict('records')
+        #then load in our regions as a geodataframe
+        filename = "gadm36_{}.shp".format(gid_region)
+        path_region = os.path.join('data', 'processed', iso3, 'gid_region', filename)
+        gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
+        gdf_region = gdf_region.to_crs('epsg:3857')
+        region_dict = gdf_region.to_dict('records')
 
 
-    #     filename = 'coastal_lookup.csv'
-    #     folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
-    #     path_coast= os.path.join(folder, filename)
-    #     if not os.path.exists(path_coast):
-    #         continue
-    #     coastal = pandas.read_csv(path_coast)
-    #     coast_list = coastal['gid_id'].values. tolist()
+        filename = 'coastal_lookup.csv'
+        folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
+        path_coast= os.path.join(folder, filename)
+        if not os.path.exists(path_coast):
+            continue
+        coastal = pandas.read_csv(path_coast)
+        coast_list = coastal['gid_id'].values. tolist()
 
-    #     for region in region_dict:
-    #         if not region[gid_level] in coast_list:
-    #             continue
+        for region in region_dict:
+            if not region[gid_level] in coast_list:
+                continue
 
-    #         output.append({
-    #             'geometry': region['geometry'],
-    #             'properties': {
-    #             'gid_id': region[gid_level]
-    #             }
-    #         })
+            output.append({
+                'geometry': region['geometry'],
+                'properties': {
+                'gid_id': region[gid_level]
+                }
+            })
 
-    # output = geopandas.GeoDataFrame.from_features(output, crs='epsg:4326') 
+    output = geopandas.GeoDataFrame.from_features(output, crs='epsg:4326') 
 
-    # filename = 'global_outline.shp'
-    # folder_out = os.path.join('data', 'processed', 'Global')
-    # if not os.path.exists(folder_out):
-    #     os.mkdir(folder_out)
-    # path_out = os.path.join(folder_out, filename)
-    # output.to_file(path_out, crs='epsg:4326')
+    filename = 'global_outline.shp'
+    folder_out = os.path.join('data', 'processed')
+    if not os.path.exists(folder_out):
+        os.mkdir(folder_out)
+    path_out = os.path.join(folder_out, filename)
+    output.to_file(path_out, crs='epsg:4326')
 

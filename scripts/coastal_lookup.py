@@ -38,11 +38,14 @@ coast_dict = gdf_coastal.to_dict("records")
 
 for country in tqdm(countries):
 
-    if country['Exclude'] == 1:
-        continue
-    if country['income_group'] == 'HIC':
-        continue
+    # if country['Exclude'] == 1:
+    #     continue
+    # if country['income_group'] == 'HIC':
+    #     continue
     
+    if not country['iso3'] == 'BGD':
+        continue
+
     iso3 = country["iso3"]
     gid_region = country['gid_region']
     gid_level = 'GID_{}'.format(gid_region)
