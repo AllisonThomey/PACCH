@@ -268,8 +268,8 @@ if __name__ == "__main__":
             continue
         if country['income_group'] == 'HIC':
             continue
-        # if not country['iso3'] == 'BGD':
-        #     continue
+        if not country['iso3'] == 'RUS':
+            continue
 
         iso3 = country['iso3']
         gid_region = country['gid_region']
@@ -294,13 +294,18 @@ if __name__ == "__main__":
         region_dict = regions.to_dict('records')
 
         print("Working on {}".format(iso3))
-        # process_national_population(country)
-        # process_national_hazard(country)
-        # process_rwi_geometry(country)
 
         for region in region_dict:
+            gid_id = region[gid_level]
 
             if not region[gid_level] in coast_list:
+                continue
+
+            #skip regions that have already been fully processed
+            filename_int= '{}'.format(gid_id) #each regional file is named using the gid id
+            folder_int = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
+            path_int= os.path.join(folder_int, filename_int)
+            if os.path.exists(path_int):
                 continue
 
             print("working on {}".format(region[gid_level]))

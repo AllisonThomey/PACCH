@@ -400,10 +400,9 @@ if __name__ == "__main__":
     
         if country['Exclude'] == 1:
             continue
+
         if country['income_group'] == 'HIC':
             continue
-        # if not country['iso3'] == 'BGD':
-        #     continue
 
         print("Working on {}".format(iso3))
         process_national_boundary(country)
@@ -420,8 +419,6 @@ if __name__ == "__main__":
         print("Working on process_rwi_geometry")
         process_rwi_geometry(country)
 
-
-
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
         
@@ -431,7 +428,6 @@ if __name__ == "__main__":
         gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
         gdf_region = gdf_region.to_crs('epsg:3857')
         region_dict = gdf_region.to_dict('records')
-
 
         filename = 'coastal_lookup.csv'
         folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
@@ -460,4 +456,3 @@ if __name__ == "__main__":
         os.mkdir(folder_out)
     path_out = os.path.join(folder_out, filename)
     output.to_file(path_out, crs='epsg:4326')
-

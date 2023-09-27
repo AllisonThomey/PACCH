@@ -1,18 +1,11 @@
-# plotting
+#this script creates then collects all pop data 
+#for individual countries
 import os
 import json
 import rasterio
 from rasterio.mask import mask
 import pandas
 import geopandas
-import matplotlib.pyplot as plt
-import seaborn as sns
-import contextily as cx
-# import configparser
-
-# CONFIG = configparser.ConfigParser()
-# CONFIG.read(os.path.join(os.path.dirname(__file__), 'script_config.ini'))
-# BASE_PATH = CONFIG['file_locations']['base_path']
 
 #function to turn data into csv
 def process_vul_pop(region):
@@ -55,8 +48,6 @@ def process_vul_pop(region):
         gdf_pop = geopandas.read_file(folder_pop)
         area = gdf_pop['area_km2'].sum()
         vul_pop = gdf_pop['pop_est'].sum()
-        # if vul_pop < 0.01:
-        #     continue
 
         #adding total original population from worldpop for each region
         filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
@@ -95,20 +86,16 @@ if __name__ == "__main__":
     output = []
     for country in countries:
 
-        # if country['Exclude'] == 1:
-        #     continue
+        if country['Exclude'] == 1:
+            continue
 
-        # if country['income_group'] == 'HIC':
-        #     continue
-
-        if not country['iso3'] == 'ARG':
+        if country['income_group'] == 'HIC':
             continue
 
         iso3 = country['iso3']
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
     
-
         filename = 'coastal_lookup.csv'
         folder = os.path.join('data', 'processed', iso3, 'coastal')
         path_coast= os.path.join(folder, filename)
@@ -127,13 +114,12 @@ if __name__ == "__main__":
         print('Working on {}'.format(iso3))
         process_vul_pop(country)
 
-        filename_in = 'pop_at_risk.csv'
+        filename_in = 'varifying_pop.csv'
         folder_in = os.path.join('data', 'processed', iso3 , 'csv')
         path_in = os.path.join(folder_in, filename_in)
         if not os.path.exists(path_in):
             continue
-        # if filename_in is None:
-        #     continue
+        
         pop = pandas.read_csv(path_in)
         pop = pop.to_dict('records')
         output = output + pop
@@ -145,48 +131,3 @@ if __name__ == "__main__":
     if not os.path.exists(path_out):
         os.makedirs(path_out)
     output.to_csv(path_out, index = False)
-    # data = pandas.read_csv(path_out)
-
-    # #import our boundaries data
-    # filename = 'global_outline.shp'
-    # path_in = os.path.join('data', 'processed', filename) 
-    # boundaries = geopandas.read_file(path_in, crs="EPSG:4326")
-
-    # #merge population data onto our boundaries 
-    # boundaries = boundaries.merge(data, left_on= 'gid_id' , right_on='gid_id')
-
-    # #define dummy value bins and then labels for each one
-    # bins = [-1e6, 100, 1000, 1000000, 1e12]
-    # labels = ['<100','100-1000','1000-1mil','>1mil']
-
-    # #create a new variable with our dummy bin labels
-    # boundaries['bin'] = pandas.cut(
-    #     boundaries['pop_est'],
-    #     bins=bins,
-    #     labels=labels
-    # )
-
-    # #open a new seaborn figure
-    # sns.set(font_scale=1)
-
-    # dimensions = (20,10)
-    # fig, ax = plt.subplots(1, 1, figsize=dimensions)
-    # fig.set_facecolor('gainsboro')
-
-    # #now plot our data using pandas plot
-
-    # base = boundaries.plot(column='bin', ax=ax, cmap='viridis', linewidth=0, #inferno_r
-    #     legend=True, antialiased=False)
-
-    # cx.add_basemap(ax) #add the map baselayer
-
-    # #allocate a plot title 
-    # n = len(boundaries)
-    # name = 'Population At Risk To Coastal Flooding  (n={})'.format(n)
-    # fig.suptitle(name)
-
-    # #specify where to write our .png file to
-    # path = os.path.join('data', 'processed', 'figures', 'global_flood_risk.png')
-    # fig.savefig(path)
-    # plt.close(fig)
-    
