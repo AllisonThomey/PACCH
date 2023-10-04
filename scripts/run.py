@@ -31,16 +31,20 @@ def process_regional_hazard(country, region):
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
     region_dict = gdf_region.to_dict('records')
     
-    for region in region_dict:
+    haz_scene = ["inuncoast_historical_wtsub_2080_rp0100_0.{}", "inuncoast_historical_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp4p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp4p5_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp8p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp8p5_wtsub_2080_rp1000_0.{}"]
 
+    # for region in region_dict:
+    for scene in haz_scene:
         #loading in hazard .shp
-        filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.shp' 
+        filename = scene.format("shp") 
         path_hazard = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', 'national', filename)
         if not os.path.exists(path_hazard):
             continue
         gdf_hazard = gpd.read_file(path_hazard, crs="EPSG:4326")
         #now we write out at the regional level
-        filename_out = '{}.shp'.format(gid_id)
+        filename_out = scene.format("shp")
         folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
         path_out = os.path.join(folder_out, filename_out)
         if not os.path.exists(path_out):
@@ -67,17 +71,20 @@ def process_regional_population(country, region):
     gdf_region = gpd.read_file(path_region, crs="EPSG:4326")
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
     region_dict = gdf_region.to_dict('records')
+    haz_scene = ["inuncoast_historical_wtsub_2080_rp0100_0.{}", "inuncoast_historical_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp4p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp4p5_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp8p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp8p5_wtsub_2080_rp1000_0.{}"]
     
-    for region in region_dict:
-
-        filename_haz = '{}.shp'.format(gid_id) # if the region doesn't have a hazard skip it
+    # for region in region_dict:
+    for scene in haz_scene:
+        filename_haz = scene.format("shp") # if the region doesn't have a hazard skip it
         folder_haz = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
         path_haz = os.path.join(folder_haz, filename_haz)
         if not os.path.exists(path_haz):
             continue
 
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-        folder_out = os.path.join('data', 'processed', iso3 , 'population')
+        folder_out = os.path.join('data', 'processed', iso3 , 'population', scene)
         path_out = os.path.join(folder_out, filename_out)
 
         if not os.path.exists(path_out):
@@ -160,28 +167,33 @@ def intersect_hazard_pop(country, region):
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
     region_dict = gdf_region.to_dict('records')
 
-    for region in region_dict:
+    haz_scene = ["inuncoast_historical_wtsub_2080_rp0100_0.{}", "inuncoast_historical_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp4p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp4p5_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp8p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp8p5_wtsub_2080_rp1000_0.{}"]
+    
+    # for region in region_dict:
+    for scene in haz_scene:
 
         #load in population by region .shp file
         filename_pop = '{}'.format(gid_id) #each regional file is named using the gid id
-        path_pop = os.path.join(BASE_PATH, 'processed', iso3 , 'population', filename_pop)
+        path_pop = os.path.join(BASE_PATH, 'processed', iso3 , 'population', scene, filename_pop)
         if not os.path.exists(path_pop):
             continue
         gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
 
     #load in hazard .shp file
-        filename_hazard = '{}.shp'.format(gid_id)
-        path_hazard = os.path.join(BASE_PATH, 'processed', iso3 , 'hazards', 
-                                'inuncoast', gid_id, filename_hazard)
+        filename_out = scene.format("shp")
+        folder_out = os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', gid_id)
+        path_hazard = os.path.join(folder_out, filename_out)
         if not os.path.exists(path_hazard):
             continue
         gdf_hazard = gpd.read_file(path_hazard, crs="EPSG:4326")
     
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
+        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', scene)
         path_out = os.path.join(folder_out, filename_out)
-        # if not os.path.exists(path_out):
-        #     os.makedirs(path_out)
+        if not os.path.exists(path_out):
+            os.makedirs(path_out)
         gdf_affected = gpd.overlay(gdf_pop, gdf_hazard, how='intersection')
         if len(gdf_affected) == 0:
             continue
@@ -196,7 +208,7 @@ def intersect_hazard_pop(country, region):
 
         # now we write out path at the regional level
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop')
+        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', scene)
 
         path_out = os.path.join(folder_out, filename_out)
         if not os.path.exists(path_out):
@@ -224,7 +236,12 @@ def intersect_rwi_pop(country, region):
     gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
     region_dict = gdf_region.to_dict('records')
 
-    for region in region_dict:
+    haz_scene = ["inuncoast_historical_wtsub_2080_rp0100_0.{}", "inuncoast_historical_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp4p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp4p5_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp8p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp8p5_wtsub_2080_rp1000_0.{}"]
+    
+    # for region in region_dict:
+    for scene in haz_scene:
         #load in hazard .shp file
         filename = '{}.shp'.format(gid_id)
         path_rwi = os.path.join(BASE_PATH, 'processed', iso3, 'rwi', 'regions', filename )
@@ -234,14 +251,14 @@ def intersect_rwi_pop(country, region):
         gdf_rwi = gdf_rwi.to_crs('epsg:3857')
         
         filename = '{}'.format(gid_id) #each regional file is named using the gid id
-        path_pop= os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', filename)
+        path_pop= os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'hazard_pop', scene, filename)
         if not os.path.exists(path_pop):
             continue
         gdf_pop =  gpd.read_file(path_pop, crs="EPSG:4326")
         gdf_pop = gdf_pop.to_crs('epsg:3857')
 
         filename_out = '{}'.format(gid_id) #each regional file is named using the gid id
-        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
+        folder_out = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard', scene)
 
         path_out = os.path.join(folder_out, filename_out)
         if not os.path.exists(path_out):
@@ -267,8 +284,6 @@ if __name__ == "__main__":
         if country['Exclude'] == 1:
             continue
         if country['income_group'] == 'HIC':
-            continue
-        if not country['iso3'] == 'RUS':
             continue
 
         iso3 = country['iso3']
@@ -302,11 +317,11 @@ if __name__ == "__main__":
                 continue
 
             #skip regions that have already been fully processed
-            filename_int= '{}'.format(gid_id) #each regional file is named using the gid id
-            folder_int = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
-            path_int= os.path.join(folder_int, filename_int)
-            if os.path.exists(path_int):
-                continue
+            # filename_int= '{}'.format(gid_id) #each regional file is named using the gid id
+            # folder_int = os.path.join(BASE_PATH, 'processed', iso3 , 'intersect', 'rwi_pop_hazard')
+            # path_int= os.path.join(folder_int, filename_int)
+            # if os.path.exists(path_int):
+            #     continue
 
             print("working on {}".format(region[gid_level]))
             process_regional_hazard(country, region)
