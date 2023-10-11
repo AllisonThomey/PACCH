@@ -241,28 +241,26 @@ def process_national_hazard(country):
     This function creates a national hazard.shp file
 
     """
-    path = os.path.join('data', 'countries.csv')
-    countries = pandas.read_csv(path, encoding='latin-1')
-    countries = countries.to_dict('records')
+    # path = os.path.join('data', 'countries.csv')
+    # countries = pandas.read_csv(path, encoding='latin-1')
+    # countries = countries.to_dict('records')
     iso3 = country['iso3']
     gid_region = country['gid_region']
 
-    for country in countries:
-        filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.shp'
+    haz_scene = ["inuncoast_historical_wtsub_2080_rp0100_0.{}", "inuncoast_historical_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp4p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp4p5_wtsub_2080_rp1000_0.{}", 
+                 "inuncoast_rcp8p5_wtsub_2080_rp0100_0.{}", "inuncoast_rcp8p5_wtsub_2080_rp1000_0.{}"]
+    
+    # for country in countries:
+    for scene in haz_scene:
+
+        filename = scene.format("shp")
         folder= os.path.join(BASE_PATH,'processed',iso3, 'hazards', 'inuncoast', 'national')
         path_out = os.path.join(folder, filename)
         if not os.path.exists(path_out):
 
-            #load in boundary of interest
-            filename = 'national_outline.shp'
-            folder = os.path.join(BASE_PATH, 'processed', iso3, 'national', filename)
-                
-            #then load in our country as a geodataframe
-            path_in = os.path.join(folder, filename)
-            country_shp = geopandas.read_file(path_in, crs='epsg:4326')
-
             #loading in coastal flood hazard .tiff
-            filename = 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.tif'
+            filename = scene.format('tif')
             path_hazard = os.path.join(BASE_PATH,'raw','flood_hazard', filename)
             hazard = rasterio.open(path_hazard, 'r+')
             hazard.nodata = 255                       #set the no data value
@@ -271,7 +269,6 @@ def process_national_hazard(country):
             #load in boundary of interest
             filename = 'national_outline.shp'
             folder = os.path.join(BASE_PATH, 'processed', iso3, 'national', filename)
-                
             #then load in our country as a geodataframe
             path_in = os.path.join(folder, filename)
             country_shp = geopandas.read_file(path_in, crs='epsg:4326')
@@ -295,7 +292,7 @@ def process_national_hazard(country):
                             "crs": 'epsg:4326'})
             
             #now we write out at the national level
-            filename= 'inuncoast_rcp8p5_wtsub_2080_rp1000_0.tif' 
+            filename= scene.format("tif")
             folder= os.path.join('data', 'processed', iso3 , 'hazards', 'inuncoast', 'national')
             if not os.path.exists(folder):
                 os.makedirs(folder)
@@ -405,54 +402,54 @@ if __name__ == "__main__":
             continue
 
         print("Working on {}".format(iso3))
-        process_national_boundary(country)
+        # process_national_boundary(country)
 
-        print("Working on process_regional_boundary")
-        process_regional_boundary(country)
+        # print("Working on process_regional_boundary")
+        # process_regional_boundary(country)
 
-        print("Working on process_national_population")
-        process_national_population(country)
+        # print("Working on process_national_population")
+        # process_national_population(country)
 
         print("Working on process_national_hazard")
         process_national_hazard(country)
 
-        print("Working on process_rwi_geometry")
-        process_rwi_geometry(country)
+        # print("Working on process_rwi_geometry")
+        # process_rwi_geometry(country)
 
-        gid_region = country['gid_region']
-        gid_level = 'GID_{}'.format(gid_region)
+    #     gid_region = country['gid_region']
+    #     gid_level = 'GID_{}'.format(gid_region)
         
-        #then load in our regions as a geodataframe
-        filename = "gadm36_{}.shp".format(gid_region)
-        path_region = os.path.join('data', 'processed', iso3, 'gid_region', filename)
-        gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
-        gdf_region = gdf_region.to_crs('epsg:3857')
-        region_dict = gdf_region.to_dict('records')
+    #     #then load in our regions as a geodataframe
+    #     filename = "gadm36_{}.shp".format(gid_region)
+    #     path_region = os.path.join('data', 'processed', iso3, 'gid_region', filename)
+    #     gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
+    #     gdf_region = gdf_region.to_crs('epsg:3857')
+    #     region_dict = gdf_region.to_dict('records')
 
-        filename = 'coastal_lookup.csv'
-        folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
-        path_coast= os.path.join(folder, filename)
-        if not os.path.exists(path_coast):
-            continue
-        coastal = pandas.read_csv(path_coast)
-        coast_list = coastal['gid_id'].values. tolist()
+    #     filename = 'coastal_lookup.csv'
+    #     folder = os.path.join(BASE_PATH, 'processed', iso3, 'coastal')
+    #     path_coast= os.path.join(folder, filename)
+    #     if not os.path.exists(path_coast):
+    #         continue
+    #     coastal = pandas.read_csv(path_coast)
+    #     coast_list = coastal['gid_id'].values. tolist()
 
-        for region in region_dict:
-            if not region[gid_level] in coast_list:
-                continue
+    #     for region in region_dict:
+    #         if not region[gid_level] in coast_list:
+    #             continue
 
-            output.append({
-                'geometry': region['geometry'],
-                'properties': {
-                'gid_id': region[gid_level]
-                }
-            })
+    #         output.append({
+    #             'geometry': region['geometry'],
+    #             'properties': {
+    #             'gid_id': region[gid_level]
+    #             }
+    #         })
 
-    output = geopandas.GeoDataFrame.from_features(output, crs='epsg:4326') 
+    # output = geopandas.GeoDataFrame.from_features(output, crs='epsg:4326') 
 
-    filename = 'global_outline.shp'
-    folder_out = os.path.join('data', 'processed')
-    if not os.path.exists(folder_out):
-        os.mkdir(folder_out)
-    path_out = os.path.join(folder_out, filename)
-    output.to_file(path_out, crs='epsg:4326')
+    # filename = 'global_outline.shp'
+    # folder_out = os.path.join('data', 'processed')
+    # if not os.path.exists(folder_out):
+    #     os.mkdir(folder_out)
+    # path_out = os.path.join(folder_out, filename)
+    # output.to_file(path_out, crs='epsg:4326')
