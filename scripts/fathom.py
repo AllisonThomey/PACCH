@@ -20,11 +20,11 @@ This function creates a national hazard.shp file
     iso3 = country['iso3']
     gid_region = country['gid_region']
 
-    haz_scene = ["FU_1in5.{}", "FU_1in10.{}", "FU_1in20.{}", 
-                 "FU_1in50.{}", "FU_1in75.{}", "FU_1in100.{}", 
-                 "FU_1in200.{}", "FU_1in250.{}", "FU_1in500.{}", 
-                 "FU_1in1000.{}"]
-
+    # haz_scene = ["FU_1in5.{}", "FU_1in10.{}", "FU_1in20.{}", 
+    #              "FU_1in50.{}", "FU_1in75.{}", "FU_1in100.{}", 
+    #              "FU_1in200.{}", "FU_1in250.{}", "FU_1in500.{}", 
+    #              "FU_1in1000.{}"]
+    haz_scene = ["FU_1in1000(1).{}"]
     # for country in countries:
     for scene in haz_scene:
 
@@ -35,7 +35,8 @@ This function creates a national hazard.shp file
 
             #loading in coastal flood hazard .tiff
             filename = scene.format('tif')
-            path_hazard = os.path.join(BASE_PATH,'raw','fathom', "Bangladesh", "fluvial_undefended", filename)
+            # path_hazard = os.path.join(BASE_PATH,'raw','fathom', "Bangladesh", "fluvial_undefended", filename)
+            path_hazard = os.path.join(BASE_PATH,'raw','fathom', filename)
             # print("{}".format(filename))
             hazard = rasterio.open(path_hazard, 'r+')
             hazard.nodata = 255                       #set the no data value
@@ -99,7 +100,7 @@ This function creates a national hazard.shp file
                                 'value': vec[1],
                             }
                         })
-                        (print("here5"))
+            (print("here5"))
             if len(output) == 0:
                 continue
             output = geopandas.GeoDataFrame.from_features(output, crs='epsg:4326')
