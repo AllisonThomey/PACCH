@@ -107,11 +107,58 @@ This function creates a national hazard.shp file
             output.to_file(path_out, driver='ESRI Shapefile')
     return
 
+def process_regional_hazard(country, region, haz_scene):
+    """
+    This function creates a regional hazard .tif
+
+    """
+    #assigning variables
+    iso3 = country['iso3']
+    gid_region = country['gid_region']
+    gid_level = 'GID_{}'.format(gid_region)
+    gid_id = region[gid_level]
+
+    #prefered GID level
+    filename = "gadm36_{}.shp".format(gid_region)
+    path_region = os.path.join('data', 'processed', iso3,'gid_region', filename)
+    gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
+    gdf_region = gdf_region[gdf_region[gid_level] == gid_id]
+    region_dict = gdf_region.to_dict('records')
+    haz_scene = ["FU_1in1000(1).{}"]
+    
+    # for region in region_dict:
+    for scene in haz_scene:
+
+        #now we write out at the regional level
+        filename_out = scene.format("shp")
+        folder_out = os.path.join('data', 'processed', iso3, 'fathom', gid_id)
+        path_out = os.path.join(folder_out, filename_out)
+
+        if os.path.exists(path_out):
+            continue
+
+        #loading in hazard .shp
+        filename = scene.format("shp")
+        folder= os.path.join(BASE_PATH,'processed',iso3, 'fathom', 'BGD')
+        path_hazard = os.path.join(folder, filename)
+        if not os.path.exists(path_hazard):
+            continue
+        gdf_hazard = geopandas.read_file(path_hazard, crs="EPSG:4326")
+        gdf_hazard_int = geopandas.overlay(gdf_hazard, gdf_region, how='intersection')
+        if len(gdf_hazard_int) == 0:
+            continue
+        os.makedirs(path_out)
+        gdf_hazard_int.to_file(path_out, crs='epsg:4326')
+
+    return
+
+
+
 if __name__ == "__main__":
     path = os.path.join('data', 'countries.csv')
     countries = pandas.read_csv(path, encoding='latin-1')
     countries = countries.to_dict('records')
-   
+    haz_scene = ["FU_1in1000(1).{}"]
     for country in countries:
         if not country['iso3'] == 'BGD':
             continue
@@ -119,6 +166,13 @@ if __name__ == "__main__":
         iso3 = country['iso3']
         gid_region = country['gid_region']
         gid_level = 'GID_{}'.format(gid_region)
+        filename = "gadm36_{}.shp".format(gid_region)
+        path_region = os.path.join('data', 'processed', iso3, 'regions', filename)
+        gdf_region = geopandas.read_file(path_region, crs="EPSG:4326")
+        # gdf_region = gdf_region.to_crs('epsg:3857')
+        region_dict = gdf_region.to_dict('records') 
 
-        print("working on {}".format(iso3))
-        process_national_hazard(country)
+        for region in region_dict:
+            gid_id = region[gid_level]
+            print("working on {}".format(gid_id))
+            process_regional_hazard(country, region, haz_scene)
