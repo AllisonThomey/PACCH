@@ -439,7 +439,10 @@ def process_pop_csv(region):
             if not os.path.exists(path_gsap):
                     continue
             gdf_gsap = geopandas.read_file(path_gsap)
-            gsap_mean = gdf_gsap['GSAP2_mean'][1]
+            gdf_gsap = gdf_gsap['GSAP2_mean'].astype(float)
+            gsap_mean = gdf_gsap.mean()
+            gsap_min = min(gdf_gsap)
+            gsap_max = max(gdf_gsap)
 
             filename_chi = '{}'.format(gid_id) #each regional file is named using the gid id
             folder_chi = os.path.join(BASE_PATH, 'processed', iso3 ,'fathom', 'pop_chi', scene)
@@ -449,6 +452,8 @@ def process_pop_csv(region):
             gdf_chi = geopandas.read_file(path_chi)
             gdf_chi = gdf_chi['rwi'].astype(float)
             rwi_mean = gdf_chi.mean()
+            rwi_min = min(gdf_chi)
+            rwi_max = max(gdf_chi)
 
             output.append({
                 'iso3': iso3,
@@ -456,11 +461,15 @@ def process_pop_csv(region):
                 'fath_pop': vul_pop,
                 'og_vul_pop': og_pop,
                 'gsap_mean': gsap_mean,
-                'rwi_mean': rwi_mean
+                'gsap_min': gsap_min,
+                'gsap_max': gsap_max,
+                'rwi_mean': rwi_mean,
+                'rwi_min': rwi_min,
+                'rwi_max': rwi_max
 
             })
         output=pandas.DataFrame(output)
-        filename_out = 'v4_vul_pop.csv'
+        filename_out = 'v5_vul_pop.csv'
         folder_out = os.path.join('data', 'processed', iso3 , 'fathom', 'csv', scene)
         if not os.path.exists(folder_out):
             os.makedirs(folder_out)
